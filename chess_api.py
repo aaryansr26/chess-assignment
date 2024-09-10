@@ -3,6 +3,20 @@ import json
 
 app = Flask(__name__)
 
+def is_path_clear(start, end, board):
+    start_row, start_col = start
+    end_row, end_col = end
+    row_step = (end_row - start_row) // max(1, abs(end_row - start_row))
+    col_step = (end_col - start_col) // max(1, abs(end_col - start_col))
+    
+    current_row, current_col = start_row + row_step, start_col + col_step
+    while(current_row, current_col) != (end_row, end_col):
+        if get_chess_notation(current_row, current_col) in board.values():
+            return False
+        current_row += row_step
+        current_col += col_step
+    return True
+
 def get_position(position):
     row, col = ord(position[1]) - ord('1'), ord(position[0]) - ord('A')
     return [row, col]
@@ -25,12 +39,12 @@ def get_valid_moves(board, piece):
     #rook moves
     for dr in range(-8, 8):
         new_row, new_col = rook_pos[0] + dr, rook_pos[1]
-        if 0 <= new_row < 8 and 0 <= new_col < 8:
+        if 0 <= new_row < 8 and 0 <= new_col < 8 and is_path_clear(rook_pos, [new_row, new_col], board):
             if[new_row, new_col] != [rook_pos[0], rook_pos[1]]:
                 r_moves.append(get_chess_notation(new_row, new_col))
     for dc in range(-8, 8):
         new_row, new_col = rook_pos[0], rook_pos[1] + dc
-        if 0 <= new_row < 8 and 0 <= new_col < 8:
+        if 0 <= new_row < 8 and 0 <= new_col < 8 and is_path_clear(rook_pos, [new_row, new_col], board):
             if[new_row, new_col] != [rook_pos[0], rook_pos[1]]:
                 r_moves.append(get_chess_notation(new_row, new_col))
                 
@@ -41,7 +55,7 @@ def get_valid_moves(board, piece):
             new_row = b_pos[0] + direction[0] * i
             new_col = b_pos[1] + direction[1] * i
             if 0 <= new_row < 8 and 0 <= new_col < 8: #ensure within bounds
-                if[new_row, new_col] != [b_pos[0], b_pos[1]]:
+                if[new_row, new_col] != [b_pos[0], b_pos[1]] and is_path_clear(b_pos, [new_row, new_col], board):
                     b_moves.append(get_chess_notation(new_row, new_col))
                     
     #queen moves
@@ -51,7 +65,7 @@ def get_valid_moves(board, piece):
             new_row = queen_pos[0] + direction[0] * i
             new_col = queen_pos[1] + direction[1] * i
             if 0 <= new_row < 8 and 0 <= new_col < 8:
-                if [new_row, new_col] != [queen_pos[0], queen_pos[1]]:
+                if [new_row, new_col] != [queen_pos[0], queen_pos[1]] and is_path_clear(queen_pos, [new_row, new_col], board):
                     q_moves.append(get_chess_notation(new_row, new_col))
                     
     if piece == "knight":
